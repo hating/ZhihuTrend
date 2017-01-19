@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="./static/build/jquery.min.js"></script>
+    <script src="./static/build/react.js"></script>
+    <script src="./static/build/react-dom.js"></script>
+    <script src="./static/build/browser.min.js"></script>
+    <script src="./static/build/base64.min.js"></script>
+    <link href="./static/build/css-reset.css" rel="stylesheet" type="text/css"/>
+    <link href="./static/build/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="shortcut icon" href="./static/img/fire_pink.png" type="image/x-icon">
+    <title>知乎趋势 By彭家进</title>
+</head>
+<body>
+<div id="nav"></div>
+</body>
+<script type="text/babel">
+    var loading = "这一天没有趋势数据哦=￣ω￣=";
+    var Nav = React.createClass({
+        getInitialState: function () {
+            return {
+                questions: [loading],
+            }
+        },
+        componentDidMount: function () {
+
+            var now = getNowFormatDate(0);
+            $.ajax({
+                method: "POST",
+                url: "./API/getTrend",
+                data: JSON.stringify({"date": now}),
+                success: function (result) {
+                    result = JSON.parse(result);
+                    console.log(result);
+                    this.setState({questions: result});
+                }.bind(this)
+            })
+        },
+        handleToday: function () {
+            $("#today").addClass("active");
+            $("#yesterday").removeClass("active");
+            $("#dayafteryesterday").removeClass("active");
+            var today = getNowFormatDate(0);
+            $.ajax({
+                method: "POST",
+                url: "./API/getTrend",
+                data: JSON.stringify({"date": today}),
+                success: function (result) {
+                    result = JSON.parse(result);
+                    console.log(result);
+                    this.setState({questions: result});
+                }.bind(this)
+            })
+        },
+        handleYesterday: function () {
+            $("#today").removeClass("active");
+            $("#yesterday").addClass("active");
+            $("#dayafteryesterday").removeClass("active");
+            var yesterday = getNowFormatDate(-1);
+            $.ajax({
+                method: "POST",
+                url: "./API/getTrend",
+                data: JSON.stringify({"date": yesterday}),
+                success: function (result) {
+                    result = JSON.parse(result);
+                    console.log(result);
+                    this.setState({questions: result});
+                }.bind(this)
+            })
+        },
+        handleDayafteryesterday: function () {
+            $("#today").removeClass("active");
+            $("#yesterday").removeClass("active");
+            $("#dayafteryesterday").addClass("active");
+            var dayafteryesterday = getNowFormatDate(-2);
+            $.ajax({
+                method: "POST",
+                url: "./API/getTrend",
+                data: JSON.stringify({"date": dayafteryesterday}),
+                success: function (result) {
+                    result = JSON.parse(result);
+                    this.setState({questions: result});
+                }.bind(this)
+            })
+        },
+        render: function () {
+            var backgroundStyle = {
+                overflow: "auto",
+                backgroundColor: "#f5f6f9",
+                fontFamily: "Microsoft YaHei"
+            };
+            var containerStyle = {
+                maxWidth: "1000px",
+                margin: "25px auto",
+            };
+            var buttonRed = {
+                backgroundColor: "rgb(250,134,135)",
+            };
+            var noBorder = {
+                borderTopStyle: "none",
+            };
+            var buttonStyle = {
+                backgroundColor: "rgb(250,134,135)",
+                borderColor: "rgb(250,134,135)",
+            };
+            var HeaderStyle = {
+                backgroundColor: "#f5f6f9",
+                maxHeight: "140px",
+                position: "relative",
+                top: "-80px"
+            };
+            var today = getNowFormatDate(0);
+            var yesterday = getNowFormatDate(-1);
+            var dayafteryesterday = getNowFormatDate(-2);
+            return (<div style={backgroundStyle}>
+                <div style={containerStyle}>
+                    <div>
+                        <div className="jumbotron" style={HeaderStyle}>
+                            <h1>知乎趋势</h1>
+                            <p>时刻获得最新的知乎热点回答问题。</p>
+                            <p><a className="btn btn-primary"
+                                  href="https://www.zhihu.com/people/peng-jia-jin/activities" role="button"
+                                  style={buttonStyle}
+                                  target="_blank">Crafted By
+                                彭家进</a>&nbsp;&nbsp;&nbsp;<a className="btn btn-primary"
+                                                            href="https://github.com/hating" role="button"
+                                                            style={buttonStyle}
+                                                            target="_blank">View on GitHub</a></p>
+                        </div>
+                    </div>
+                    <div>
+                        <ul className="nav nav-tabs" role="tablist">
+                            <li role="presentation" className="active" id="today" onClick={this.handleToday}><a
+                                    href="#">{today.substring(0, 4) + "年" + today.substring(5, 7) + "月" + today.substring(8, 10) + "日"}</a>
+                            </li>
+                            <li role="presentation" id="yesterday" onClick={this.handleYesterday}><a
+                                    href="#">{yesterday.substring(0, 4) + "年" + yesterday.substring(5, 7) + "月" + yesterday.substring(8, 10) + "日"}</a>
+                            </li>
+                            <li role="presentation" id="dayafteryesterday" onClick={this.handleDayafteryesterday}><a
+                                    href="#">{dayafteryesterday.substring(0, 4) + "年" + dayafteryesterday.substring(5, 7) + "月" + dayafteryesterday.substring(8, 10) + "日"}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div className="panel panel-default" style={noBorder}>
+                            <div className="panel-body">
+                                <ul className="list-group">
+                                    {this.state.questions.map(function (i) {
+                                        var currentUrl = "https://www.zhihu.com/question/" + i[1];
+                                        return (
+                                                <li className="list-group-item">
+                                                    <span className="badge" style={buttonRed}>{i[2]} <img
+                                                            src="./static/img/fire.png"/></span>
+                                                    <a href={currentUrl} target="_blank">{i[0]}</a>
+                                                </li>
+                                        )
+                                    }.bind(this))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <
+                / div >)
+                }
+                })
+                ReactDOM.render(
+                <div>
+                    <Nav/>
+                </div>
+                , document.getElementById("nav")
+                )
+                function getNowFormatDate(daycount) {
+                    var date = new Date();
+                    date.setDate(date.getDate() + daycount);
+                    var seperator1 = "_";
+                    var year = date.getFullYear();
+                    var month = date.getMonth() + 1;
+                    var strDate = date.getDate();
+                    if (month >= 1 && month <= 9) {
+                    month = "0" + month;
+                }
+                    if (strDate >= 0 && strDate <= 9) {
+                    strDate = "0" + strDate;
+                }
+                    var currentdate = year + seperator1 + month + seperator1 + strDate;
+                    return currentdate;
+                }
+</script>
+</html>
